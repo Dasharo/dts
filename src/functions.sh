@@ -13,6 +13,17 @@ BLUE='\033[0;36m'
 # GRAY='\033[0;30m'
 # FGRED='\033[0;41m'
 
+QUIET="true"
+
+# stdout console logs, which can be suppressed if QUEST is set to "true"
+log() {
+  local _msg="$1"
+
+  if [ "${QUIET}" != "true" ]; then
+    echo "$message"
+  fi
+}
+
 ### Color echo functions
 function echo_green() {
   echo -e "$GREEN""$1""$COLOR_OFF"
@@ -75,10 +86,12 @@ function get_hw_info() {
 
 ###############################################################################
 # Check whether Dasharo is already installed. Save the true/false result to a
-# global variable.
+# global variable. If Dasharo is installed, save the version to the
+# DASHARO_VERSION global variable.
 #
 # Globals:
 #   IS_DASHARO
+#   DASHARO_VERSION
 # Arguments:
 #   None
 # Outputs:
@@ -92,6 +105,7 @@ function check_if_dasharo() {
   if [[ ${BIOS_VENDOR} == *${_expected_dasharo_vendor}* &&
         ${BIOS_VERSION} == *${_expected_dasharo_version}* ]]; then
     IS_DASHARO="true"
+    DASHARO_VERSION="$(echo $BIOS_VERSION | cut -d ' ' -f 3 | tr -d 'v')"
   else
     IS_DASHARO="false"
   fi
@@ -116,7 +130,7 @@ function check_if_dasharo() {
 
 function show_header() {
   local _os_version
-  _os_version=$(grep "VERSION_ID" /etc/os-release | cut -d "=" -f 2-)
+  _os_version=$(grep "VERSION_ID" ${OS_VERSION_FILE} | cut -d "=" -f 2-)
   printf "\ec"
   echo -e "${NORMAL}\n Dasharo Tools Suite Script ${_os_version} ${NORMAL}"
   echo -e "${NORMAL} (c) Dasharo <contact@dasharo.com> ${NORMAL}"
@@ -180,6 +194,7 @@ show_menu() {
   read -er opt
   case $opt in
     1)
+      dasharo_hcl_report
       ;;
 
     2)
@@ -187,18 +202,16 @@ show_menu() {
 
     [rR])
       echo -e "\nRebooting...\n";
-      reboot
-      exit
+      ${CMD_REBOOT}
       ;;
 
     [pP])
       echo -e "\nPowering off...\n";
-      poweroff
-      exit
+      ${CMD_POWEROFF}
       ;;
 
     [sS])
-      exit;
+      ${CMD_SHELL}
       ;;
     *)
       clear
