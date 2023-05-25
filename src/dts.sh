@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-#set -Eeuo pipefail
-set -x
-
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
-# shellcheck source=./src/functions.sh
+# set -x
+
+# shellcheck source=./src/env.sh
 source "${script_dir}/env.sh"
+# shellcheck source=./src/functions.sh
 source "${script_dir}/functions.sh"
-source "${script_dir}/dasharo-hcl-report"
+# shellcheck source=./src/dasharo-hcl-report.sh
+source "${script_dir}/dasharo-hcl-report.sh"
 
 while : ; do
   get_hw_info

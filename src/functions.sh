@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -Eeuo pipefail
+# set -Eeuo pipefail
 
 ##### Generic functions - could be useful also outside of DTS
 #### Logging and colors
@@ -13,14 +13,14 @@ BLUE='\033[0;36m'
 # GRAY='\033[0;30m'
 # FGRED='\033[0;41m'
 
-QUIET="true"
+VERBOSE="false"
 
 # stdout console logs, which can be suppressed if QUEST is set to "true"
 log() {
   local _msg="$1"
 
-  if [ "${QUIET}" != "true" ]; then
-    echo "$message"
+  if [ "${VERBOSE}" = "true" ]; then
+    echo "$_msg"
   fi
 }
 
@@ -105,7 +105,7 @@ function check_if_dasharo() {
   if [[ ${BIOS_VENDOR} == *${_expected_dasharo_vendor}* &&
         ${BIOS_VERSION} == *${_expected_dasharo_version}* ]]; then
     IS_DASHARO="true"
-    DASHARO_VERSION="$(echo $BIOS_VERSION | cut -d ' ' -f 3 | tr -d 'v')"
+    DASHARO_VERSION="$(echo "$BIOS_VERSION" | cut -d ' ' -f 3 | tr -d 'v')"
   else
     IS_DASHARO="false"
   fi
@@ -130,7 +130,7 @@ function check_if_dasharo() {
 
 function show_header() {
   local _os_version
-  _os_version=$(grep "VERSION_ID" ${OS_VERSION_FILE} | cut -d "=" -f 2-)
+  _os_version=$(grep "VERSION_ID" "${OS_VERSION_FILE}" | cut -d "=" -f 2-)
   printf "\ec"
   echo -e "${NORMAL}\n Dasharo Tools Suite Script ${_os_version} ${NORMAL}"
   echo -e "${NORMAL} (c) Dasharo <contact@dasharo.com> ${NORMAL}"
@@ -217,4 +217,19 @@ show_menu() {
       clear
       ;;
   esac
+}
+
+check_network_connection() {
+  echo 'Waiting for network connection ...'
+  n="5"
+  while : ; do
+    ping -c 3 cloud.3mdeb.com > /dev/null 2>&1 && break
+    n=$((n-1))
+    if [ "${n}" == "0" ]; then
+      echo 'No network connection to 3mdeb cloud, please recheck Ethernet connection'
+      return 1
+    fi
+    sleep 1
+  done
+  return 0
 }
